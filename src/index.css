@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.grabbed{
+    cursor: move !important;
+	cursor: -webkit-grabbing !important;
+	cursor:    -moz-grabbing !important;
+	cursor:         grabbing !important; 
+}
