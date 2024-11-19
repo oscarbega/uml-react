@@ -7,7 +7,7 @@ import {
   useInternalNode,
   useReactFlow,
 } from "@xyflow/react";
-import { DragEvent, FC, useEffect, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import { getEdgeParams, getPathMidpoint } from "../utils";
 
 export const CustomEdge: FC<
@@ -18,17 +18,16 @@ export const CustomEdge: FC<
       sourceRole: string;
       targetRole: string;
       type: "association" | "inheritance" | "realization"|"generalization"|"aggregation"|"composition"|"dependency"|"one way association";
-      midpointX?: number;
-      midpointY?: number;
+      midPointX?: number;
+      midPointY?: number;
       midPointEntry?:Position;
       midPointExit?:Position;
     }>
   >
 > = ({ id, source, target, data,selected}) => {
-  const {setEdges,screenToFlowPosition,} = useReactFlow();
+  const {setEdges,} = useReactFlow();
   const sourceNode = useInternalNode(source);
   const targetNode = useInternalNode(target);
-  const [isgrabbing,setIsgrabbing] = useState(false)
   const [selectedState,setSelectedState] = useState(selected)
   useEffect(() => {
     setSelectedState(selected)
@@ -49,24 +48,56 @@ export const CustomEdge: FC<
     targetX: tx,
     targetY: ty,
   });
+  const[midpoint,setMidpoint] = useState(getPathMidpoint(edgePath))
   
-  const midpoint = getPathMidpoint(edgePath)
+  useEffect(() =>{
+    if(data?.midPointX==null){
+      const [newedgePath] = getSmoothStepPath({
+        sourceX: sx,
+        sourceY: sy,
+        sourcePosition: sourcePos,
+        targetPosition: targetPos,
+        targetX: tx,
+        targetY: ty,
+      });
+      setMidpoint(getPathMidpoint(newedgePath))
+      setEdges(edges=>edges.map(edge=>{
+        if(edge.id===id){
+          const newEdge = { ...edge };
+            if (edge.data) {
+              newEdge.data = {
+                ...edge.data,
+                midPointX: midpoint.x,
+                midPointY: midpoint.y,
+                midPointEntry: midpoint.entryPos,
+                midPointExit: midpoint.exitPos,
+              };
+            }
+            return newEdge
+        }else{
+          return edge
+        }
+      }))
+    }
+  },[data])
+  
   const [posState,setPosState] = useState({
     midpointX: midpoint.x,
     midpointY: midpoint.y,
   })
-  
+
+
   const [firstHalf] = getSmoothStepPath({
     sourceX: sx,
     sourceY: sy,
     sourcePosition: sourcePos,
     targetPosition: data?.midPointEntry || midpoint.entryPos,
-    targetX: posState.midpointX,
-    targetY: posState.midpointY,
+    targetX: midpoint.x,
+    targetY: midpoint.y,
   })
   const [secondHalf] = getSmoothStepPath({
-    sourceX: posState.midpointX,
-    sourceY: posState.midpointY,
+    sourceX: midpoint.x,
+    sourceY: midpoint.y,
     sourcePosition: midpoint.exitPos,
     targetPosition: targetPos,
     targetX: tx,
@@ -149,18 +180,13 @@ export const CustomEdge: FC<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleDragStart = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     event.stopPropagation();
-    setIsgrabbing(true);
+    
   
     const handleMouseMove = (moveEvent: MouseEvent) => {
-      
-      const pos = screenToFlowPosition({
-        x: moveEvent.clientX,
-        y: moveEvent.clientY,
-      });
-      console.log(moveEvent.x)
-      setPosState((prev) => ({
-        midpointX:prev.midpointX + moveEvent.movementX*0.5,
-        midpointY: prev.midpointY + moveEvent.movementY*0.5,
+      setMidpoint((prev) => ({
+        ...prev,
+        x:prev.x + moveEvent.movementX*0.5,
+        y: prev.y + moveEvent.movementY*0.5,
       }));
   
       setEdges((edges) =>
@@ -185,7 +211,6 @@ export const CustomEdge: FC<
     };
   
     const handleMouseUp = () => {
-      setIsgrabbing(false);
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
@@ -226,7 +251,7 @@ export const CustomEdge: FC<
         onMouseDown={(e)=>handleDragStart(e)}
         style={{
           display: `${selectedState?'block':'none'}`,
-          transform: `translate(-50%,-50%) translate(${posState.midpointX}px,${posState.midpointY}px)`,
+          transform: `translate(-50%,-50%) translate(${midpoint.x}px,${midpoint.y}px)`,
           position: "absolute",
         }}
         ></div>

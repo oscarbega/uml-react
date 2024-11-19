@@ -28,23 +28,20 @@ const Flow = ({onSelectNode,onSelectEdge=()=>{}}:any) => {
             data:{
                 className:className,
                 attributes:[],
+            },
+            style:{
+
             }
         }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         setNodes((nodes:any)=>nodes.concat(newNode))
         setIsModalOpen(false)
     }
-
-    const handleNodeClick = (_: any,node: any)=> {
-        onSelectEdge(null)
-        onSelectNode(node)
-    };
-    const handleEdgeClick = (_: any,node: any)=> {
-        onSelectNode(null)
-        onSelectEdge(node)
-        console.log(_)
-    };
-
+    const handleSelect = (event:any) => {
+        onSelectNode(event.nodes[0])
+        onSelectEdge(event.edges[0])
+    }
+    
     return(<div style={{width:'100%'}}>
         <ReactFlow
             nodeTypes={nodeTypes}
@@ -52,10 +49,10 @@ const Flow = ({onSelectNode,onSelectEdge=()=>{}}:any) => {
             edges={edges}
             onEdgesChange={OnEdgeChange}
             nodes={nodes}
-            onNodeClick={handleNodeClick}
+            onSelectionChange={handleSelect}
             onNodesChange={OnNodeChange}
             onDragOver={(e)=>(e.preventDefault)}
-            onEdgeClick={handleEdgeClick}
+            
             snapToGrid={false}
         >
             <Background ></Background>

@@ -1,0 +1,29 @@
+.custom-node {
+    @apply w-72 font-sans text-white bg-white/10 backdrop-blur-sm flex flex-col gap-1 rounded-md shadow-sm p-2
+}
+
+.selected .custom-node--wrapper {
+    @apply relative backdrop-blur-sm before:absolute before:h-full before:top-0 before:left-0 before:rounded-md before:w-full
+}
+
+@keyframes gradient {
+    from {
+        background-position: 0% 0%;
+    }
+
+    to {
+        background-position: 200% 200%;
+    }
+}
+
+.selected .custom-node--wrapper::before{
+    transform: scale(102%);
+    background-image: linear-gradient(to right, theme(colors.teal.500), theme(colors.sky.500), theme(colors.fuchsia.300), theme(colors.sky.500), theme(colors.teal.500));
+    background-size: 200%;
+    animation: gradient 4s linear infinite;
+    @apply blur-sm;
+}
+
+.selected .custom-node {
+    @apply bg-gray-500 ring-1 ring-teal-400;
+}
